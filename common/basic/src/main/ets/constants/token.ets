@@ -1,0 +1,1 @@
+export const TOKEN_KEY = 'user_token' // 用来存储用的token的健
