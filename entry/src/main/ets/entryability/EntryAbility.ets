@@ -1,6 +1,7 @@
+import { Advert, UserSettingClass } from '@hm/basic/Index';
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
-import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { hilog } from '@kit.PerformanceAnalysisKit';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -11,17 +12,27 @@ export default class EntryAbility extends UIAbility {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onDestroy');
   }
 
-  onWindowStageCreate(windowStage: window.WindowStage): void {
-    // Main window is created, set main page for this ability
-    hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
-
-    windowStage.loadContent('pages/Index', (err) => {
-      if (err.code) {
-        hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
-        return;
-      }
-      hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
-    });
+  async onWindowStageCreate(windowStage: window.WindowStage) {
+    // 获取
+    const setting: UserSettingClass = new UserSettingClass(this.context)
+    // 模拟请求拿到广告信息
+    const result = await new Promise<Advert>((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          showAd: true,
+          adTime: 5,
+          adImg: $r('app.media.start')
+        } as Advert)
+      }, 500)
+    })
+    await setting.setUserAd(result)
+    if (result.showAd) {
+      // 展示广告
+      const win = await windowStage.createSubWindow("ad_window")
+      await win.showWindow()
+      win.setUIContent('pages/Start/Start')
+    }
+    windowStage.loadContent('pages/Index')
   }
 
   onWindowStageDestroy(): void {
